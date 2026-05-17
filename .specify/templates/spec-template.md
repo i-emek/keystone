@@ -65,7 +65,19 @@
 
 [Add more user stories as needed, each with an assigned priority]
 
-### Edge Cases
+## MVP Scope & Expansion Path *(mandatory)*
+
+**MVP Slice**: [Describe the smallest independently valuable slice to ship first]
+
+**Out of Scope for MVP**:
+
+- [Deferred capability]
+- [Deferred capability]
+
+**Expansion Path**: [Describe the interface, migration path, or boundary that
+keeps the MVP extensible without implementing future phases now]
+
+## Edge Cases
 
 <!--
   ACTION REQUIRED: The content in this section represents placeholders.
@@ -75,11 +87,24 @@
 - What happens when [boundary condition]?
 - How does system handle [error scenario]?
 
+## Trust, Compliance & Safety *(mandatory)*
+
+- **Decision Support Boundary**: [State whether the feature influences people
+  decisions and what human review or approval remains mandatory]
+- **Auditability**: [State what must be logged, versioned, or explainable so
+  outputs can be reconstructed]
+- **Data Handling**: [State tenant isolation tier, data sensitivity,
+  protected/proxy-sensitive attribute rules, and residency assumptions]
+- **Failure Posture**: [Describe how the feature behaves when evidence,
+  confidence, or data quality is insufficient]
+
 ## Requirements *(mandatory)*
 
 <!--
   ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
+  Fill them out with the right functional requirements. Include auditability,
+  access control, or isolation requirements whenever the feature touches
+  people-impacting workflows or sensitive tenant data.
 -->
 
 ### Functional Requirements

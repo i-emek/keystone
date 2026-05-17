@@ -22,6 +22,8 @@
 **Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
 **Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
 **Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Tier / Sensitivity**: [e.g., Map MVP / Decide / Enterprise path; low/medium/high people-impacting sensitivity]  
+**Compliance / Trust Posture**: [e.g., advisory-only, HIL required, audit log, protected-attribute exclusions, residency constraints]  
 **Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
 **Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
 **Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
@@ -31,7 +33,18 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- Smallest viable slice is explicit, delivers standalone value, and names what is
+  deferred beyond MVP.
+- Expansion path is defined as a seam or migration path, not as speculative
+  infrastructure built ahead of need.
+- Human oversight, audit trail, and decision-support boundaries are documented for
+  any people-impacting behavior.
+- Data handling is bounded: tenant isolation, sensitivity, residency assumptions,
+  and protected-attribute exclusions are captured.
+- Validation, logging, access control, and failure visibility are proportional to
+  the risk of the feature.
+- Any extra complexity added for enterprise readiness is justified in Complexity
+  Tracking with the simpler alternative explicitly rejected.
 
 ## Project Structure
 

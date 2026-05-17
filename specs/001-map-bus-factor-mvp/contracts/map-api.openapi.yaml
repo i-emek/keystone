@@ -1,0 +1,530 @@
+openapi: 3.1.0
+info:
+  title: Keystone Map MVP API
+  version: 0.1.0
+  summary: Minimal API contract for onboarding, publish, search, and audit flows.
+servers:
+  - url: https://api.keystone.local
+security:
+  - bearerAuth: []
+paths:
+  /v1/source-connections:
+    get:
+      summary: List source connections for the active tenant
+      operationId: listSourceConnections
+      responses:
+        '200':
+          description: Source connection statuses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SourceConnection'
+    post:
+      summary: Create or authorize a source connection
+      operationId: createSourceConnection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourceConnectionCreate'
+      responses:
+        '201':
+          description: Source connection created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceConnection'
+  /v1/topic-map/bootstrap:
+    post:
+      summary: Start topic-map bootstrap for the active tenant
+      operationId: bootstrapTopicMap
+      responses:
+        '202':
+          description: Bootstrap started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJob'
+  /v1/topic-map/draft:
+    get:
+      summary: Fetch the current draft topic map
+      operationId: getDraftTopicMap
+      responses:
+        '200':
+          description: Draft topic map
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                  topics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TopicDraft'
+                required: [version, topics]
+  /v1/topic-map/draft/topics/{topicId}:
+    patch:
+      summary: Update a draft topic
+      operationId: patchDraftTopic
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopicDraftPatch'
+      responses:
+        '200':
+          description: Updated topic draft
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicDraft'
+  /v1/topic-map/publish:
+    post:
+      summary: Publish the current topic map and bus-factor audit
+      operationId: publishTopicMap
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishAuditRequest'
+      responses:
+        '201':
+          description: Published audit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishedAudit'
+  /v1/topics/search:
+    get:
+      summary: Search for a topic and ranked experts
+      operationId: searchTopics
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Topic search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicSearchResponse'
+  /v1/topics/{topicId}/coverage:
+    get:
+      summary: Get coverage details for a topic
+      operationId: getTopicCoverage
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      responses:
+        '200':
+          description: Topic coverage snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicCoverage'
+  /v1/topics/{topicId}/activity:
+    get:
+      summary: Get recent classified activity for a topic
+      operationId: getTopicActivity
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      responses:
+        '200':
+          description: Topic activity timeline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicActivityResponse'
+  /v1/impact-preview:
+    post:
+      summary: Preview how coverage changes if one contributor becomes unavailable
+      operationId: createImpactPreview
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImpactPreviewRequest'
+      responses:
+        '200':
+          description: Person-loss impact preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactPreviewResponse'
+  /v1/audits/{auditId}:
+    get:
+      summary: Retrieve a published audit
+      operationId: getPublishedAudit
+      parameters:
+        - $ref: '#/components/parameters/AuditId'
+      responses:
+        '200':
+          description: Published audit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishedAudit'
+  /v1/audits/{auditId}/changes:
+    get:
+      summary: Retrieve topic-map changes associated with a published audit
+      operationId: getAuditChanges
+      parameters:
+        - $ref: '#/components/parameters/AuditId'
+      responses:
+        '200':
+          description: Audit change records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MapChangeRecord'
+  /v1/identities/re-identify:
+    post:
+      summary: Request named contributor access for an authorized tenant role
+      operationId: reidentifyContributor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReidentifyRequest'
+      responses:
+        '201':
+          description: Re-identification event recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReidentifyResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    AuditId:
+      name: auditId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    SourceConnectionCreate:
+      type: object
+      properties:
+        sourceType:
+          type: string
+          enum: [github, gitlab, jira, confluence]
+        authorizationMode:
+          type: string
+          enum: [app, oauth, service_account]
+      required: [sourceType, authorizationMode]
+    SourceConnection:
+      type: object
+      properties:
+        connectionId:
+          type: string
+          format: uuid
+        sourceType:
+          type: string
+        status:
+          type: string
+          enum: [pending, authorized, syncing, ready, degraded, disconnected]
+        lastSyncedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required: [connectionId, sourceType, status]
+    AsyncJob:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, running]
+      required: [jobId, status]
+    TopicDraft:
+      type: object
+      properties:
+        topicId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        confidence:
+          type: number
+          format: float
+        criticality:
+          type: string
+          enum: [critical, standard, low_activity]
+        activityCount:
+          type: integer
+      required: [topicId, name, confidence, criticality, activityCount]
+    TopicDraftPatch:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [rename, merge, split, mark_critical, mark_standard]
+        name:
+          type: string
+        relatedTopicId:
+          type: string
+          format: uuid
+      required: [action]
+    PublishAuditRequest:
+      type: object
+      properties:
+        approvedTopicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        approvalNote:
+          type: string
+      required: [approvedTopicIds]
+    ExpertResult:
+      type: object
+      properties:
+        personId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+          description: Pseudonym by default; named only in authorized views
+        score:
+          type: number
+          format: float
+        confidence:
+          type: string
+          enum: [low, medium, high]
+      required: [personId, displayName, score, confidence]
+    TopicCoverage:
+      type: object
+      properties:
+        topicId:
+          type: string
+          format: uuid
+        coverageConfidence:
+          type: string
+          enum: [low, medium, high]
+        provisional:
+          type: boolean
+        evidenceCoverage:
+          type: object
+          additionalProperties: true
+        experts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpertResult'
+        warmBackups:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpertResult'
+        riskFlags:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskFlag'
+      required: [topicId, coverageConfidence, provisional, evidenceCoverage, experts, warmBackups, riskFlags]
+    TopicActivityItem:
+      type: object
+      properties:
+        activityId:
+          type: string
+          format: uuid
+        occurredAt:
+          type: string
+          format: date-time
+        sourceType:
+          type: string
+          enum: [github, gitlab, jira, confluence]
+        actorDisplayName:
+          type: string
+          description: Pseudonym by default; named only in authorized views
+        actionSummary:
+          type: string
+        classificationState:
+          type: string
+          enum: [assigned, needs_review, unassigned]
+      required: [activityId, occurredAt, sourceType, actorDisplayName, actionSummary, classificationState]
+    TopicActivityResponse:
+      type: object
+      properties:
+        topicId:
+          type: string
+          format: uuid
+        newestActivityAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicActivityItem'
+      required: [topicId, newestActivityAt, items]
+    TopicSearchResponse:
+      type: object
+      properties:
+        query:
+          type: string
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicCoverage'
+      required: [query, topics]
+    RiskFlag:
+      type: object
+      properties:
+        topicId:
+          type: string
+          format: uuid
+        riskType:
+          type: string
+          enum: [bf1, bf2, mentor_loss]
+        severity:
+          type: string
+          enum: [low, medium, high]
+        confidence:
+          type: string
+          enum: [low, medium, high]
+        rationaleSummary:
+          type: string
+      required: [topicId, riskType, severity, confidence, rationaleSummary]
+    ImpactPreviewRequest:
+      type: object
+      properties:
+        scopeType:
+          type: string
+          enum: [topic, team]
+        scopeId:
+          type: string
+          format: uuid
+        unavailablePersonId:
+          type: string
+          format: uuid
+      required: [scopeType, scopeId, unavailablePersonId]
+    ImpactPreviewTopicDelta:
+      type: object
+      properties:
+        topicId:
+          type: string
+          format: uuid
+        topicName:
+          type: string
+        baselineConfidence:
+          type: string
+          enum: [low, medium, high]
+        projectedConfidence:
+          type: string
+          enum: [low, medium, high]
+        backupPosture:
+          type: string
+          enum: [stable, degraded, critical]
+        projectedRiskFlags:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskFlag'
+      required: [topicId, topicName, baselineConfidence, projectedConfidence, backupPosture, projectedRiskFlags]
+    ImpactPreviewResponse:
+      type: object
+      properties:
+        scopeType:
+          type: string
+          enum: [topic, team]
+        scopeId:
+          type: string
+          format: uuid
+        unavailablePersonId:
+          type: string
+          format: uuid
+        generatedAt:
+          type: string
+          format: date-time
+        affectedTopics:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImpactPreviewTopicDelta'
+      required: [scopeType, scopeId, unavailablePersonId, generatedAt, affectedTopics]
+    PublishedAudit:
+      type: object
+      properties:
+        auditId:
+          type: string
+          format: uuid
+        publishedAt:
+          type: string
+          format: date-time
+        coverageSummary:
+          type: object
+          additionalProperties: true
+        riskFlags:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskFlag'
+      required: [auditId, publishedAt, coverageSummary, riskFlags]
+    MapChangeRecord:
+      type: object
+      properties:
+        changeId:
+          type: string
+          format: uuid
+        changeType:
+          type: string
+          enum: [add, rename, merge, split, delete, criticality_update]
+        actorId:
+          type: string
+          format: uuid
+        occurredAt:
+          type: string
+          format: date-time
+        justification:
+          type: string
+      required: [changeId, changeType, actorId, occurredAt]
+    ReidentifyRequest:
+      type: object
+      properties:
+        personId:
+          type: string
+          format: uuid
+        purpose:
+          type: string
+        justification:
+          type: string
+      required: [personId, purpose, justification]
+    ReidentifyResponse:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        personId:
+          type: string
+          format: uuid
+        approvedView:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+      required: [eventId, personId, approvedView, occurredAt]
