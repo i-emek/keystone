@@ -1,0 +1,42 @@
+{
+  "services": [
+    {
+      "name": "frontend",
+      "path": "frontend",
+      "runtime": "nextjs",
+      "entrypoint": "pnpm --dir frontend dev",
+      "dependencies": ["backend"]
+    },
+    {
+      "name": "backend",
+      "path": "backend",
+      "runtime": "fastapi",
+      "entrypoint": "uv run --project backend uvicorn src.main:app --app-dir backend --host 0.0.0.0 --port 8000 --reload",
+      "dependencies": ["postgres", "ministack", "elasticmq"]
+    },
+    {
+      "name": "worker",
+      "path": "worker",
+      "runtime": "python",
+      "entrypoint": "uv run --project worker --directory worker python -m src.main",
+      "dependencies": ["elasticmq", "ministack"]
+    }
+  ],
+  "localDependencies": [
+    {
+      "name": "postgres",
+      "capability": "database",
+      "endpoint": "postgresql://keystone:keystone@localhost:5432/keystone"
+    },
+    {
+      "name": "ministack",
+      "capability": "s3-compatible-storage",
+      "endpoint": "http://localhost:4566"
+    },
+    {
+      "name": "elasticmq",
+      "capability": "sqs-compatible-queue",
+      "endpoint": "http://localhost:9324"
+    }
+  ]
+}

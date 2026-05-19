@@ -1,0 +1,35 @@
+services:
+  frontend:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.frontend
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://backend:8000
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.backend
+    environment:
+      DATABASE_URL: postgresql://keystone:keystone@postgres:5432/keystone
+      AWS_ENDPOINT_URL: http://ministack:4566
+      QUEUE_ENDPOINT_URL: http://elasticmq:9324
+      QUEUE_URL: http://elasticmq:9324/queue/keystone-events
+    depends_on:
+      - postgres
+      - ministack
+      - elasticmq
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.worker
+    environment:
+      AWS_ENDPOINT_URL: http://ministack:4566
+      QUEUE_ENDPOINT_URL: http://elasticmq:9324
+      QUEUE_URL: http://elasticmq:9324/queue/keystone-events
+    depends_on:
+      - ministack
+      - elasticmq

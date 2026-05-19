@@ -1,0 +1,12 @@
+FROM python:3.11-slim AS base
+
+WORKDIR /app
+COPY worker ./worker
+
+RUN pip install uv && uv sync --project worker --group dev
+
+ENV AWS_ENDPOINT_URL=http://ministack:4566 \
+	QUEUE_ENDPOINT_URL=http://elasticmq:9324 \
+	QUEUE_URL=http://elasticmq:9324/queue/keystone-events
+
+CMD ["uv", "run", "--project", "worker", "--directory", "worker", "python", "-m", "src.main"]
