@@ -1,6 +1,10 @@
 import React from "react";
 import type { RuntimeStatus } from "../../lib/api-client";
 
+import { StatusBadge } from "./StatusBadge";
+import { SurfaceCard } from "./SurfaceCard";
+import { semanticTokenSets, toneFromRuntimeStatus } from "./stateSemantics";
+
 type WorkspaceStatusProps = {
   status: RuntimeStatus;
 };
@@ -12,76 +16,40 @@ const SERVICE_LABELS: Record<string, string> = {
   queue: "Queue",
 };
 
-function toneForStatus(status: "ready" | "degraded") {
-  return status === "ready"
-    ? { bg: "#e8f5e9", fg: "#1b5e20" }
-    : { bg: "#fff4e5", fg: "#9c4f00" };
-}
-
 export function WorkspaceStatus({ status }: WorkspaceStatusProps) {
-  const overallTone = toneForStatus(status.status);
+  const overallTone = toneFromRuntimeStatus(status.status);
+  const overallPanel = semanticTokenSets[overallTone];
 
   return (
-    <section>
+    <section className="ks-runtime-status" aria-label="Workspace runtime status">
       <div
+        className="ks-runtime-status__hero"
         style={{
-          background: overallTone.bg,
-          color: overallTone.fg,
-          borderRadius: 16,
-          padding: 24,
-          marginBottom: 24,
+          background: overallPanel.panelBackground,
+          borderColor: overallPanel.panelBorder,
         }}
       >
-        <strong style={{ display: "block", marginBottom: 8 }}>
-          Workspace status: {status.status}
-        </strong>
-        <span>{status.message}</span>
+        <div>
+          <p className="ks-runtime-status__eyebrow">Live runtime</p>
+          <h2 className="ks-runtime-status__title">Workspace status: {status.status}</h2>
+          <p className="ks-runtime-status__message">{status.message}</p>
+        </div>
+        <StatusBadge label={status.status} tone={overallTone} />
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gap: 16,
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-        }}
-      >
+      <div className="ks-runtime-status__grid">
         {Object.entries(status.services).map(([name, serviceStatus]) => {
-          const tone = toneForStatus(serviceStatus);
+          const tone = toneFromRuntimeStatus(serviceStatus);
 
           return (
-            <article
+            <SurfaceCard
               key={name}
-              style={{
-                background: "white",
-                borderRadius: 16,
-                padding: 20,
-                boxShadow: "0 12px 32px rgba(20, 33, 61, 0.08)",
-              }}
+              eyebrow="Service"
+              title={SERVICE_LABELS[name] ?? name}
+              description="Availability reflects the backend health contract for the current local workspace."
             >
-              <div
-                style={{
-                  fontSize: 14,
-                  textTransform: "uppercase",
-                  letterSpacing: 1.1,
-                  color: "#5c677d",
-                }}
-              >
-                {SERVICE_LABELS[name] ?? name}
-              </div>
-              <div
-                style={{
-                  marginTop: 10,
-                  display: "inline-block",
-                  padding: "6px 10px",
-                  borderRadius: 999,
-                  background: tone.bg,
-                  color: tone.fg,
-                  fontWeight: 600,
-                }}
-              >
-                {serviceStatus}
-              </div>
-            </article>
+              <StatusBadge label={serviceStatus} tone={tone} />
+            </SurfaceCard>
           );
         })}
       </div>
