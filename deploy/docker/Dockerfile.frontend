@@ -1,0 +1,12 @@
+FROM node:20-bookworm-slim AS base
+
+WORKDIR /app
+COPY package.json pnpm-workspace.yaml ./
+COPY frontend/package.json frontend/package.json
+RUN corepack enable && corepack pnpm install --filter @keystone/frontend... --ignore-workspace
+
+COPY frontend ./frontend
+
+WORKDIR /app/frontend
+EXPOSE 3000
+CMD ["corepack", "pnpm", "dev"]

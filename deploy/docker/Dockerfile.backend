@@ -1,0 +1,13 @@
+FROM python:3.11-slim AS base
+
+WORKDIR /app
+COPY backend ./backend
+
+RUN pip install uv && uv sync --project backend --group dev
+
+ENV AWS_ENDPOINT_URL=http://ministack:4566 \
+	QUEUE_ENDPOINT_URL=http://elasticmq:9324 \
+	QUEUE_URL=http://elasticmq:9324/queue/keystone-events
+
+EXPOSE 8000
+CMD ["uv", "run", "--project", "backend", "uvicorn", "src.main:app", "--app-dir", "backend", "--host", "0.0.0.0", "--port", "8000"]

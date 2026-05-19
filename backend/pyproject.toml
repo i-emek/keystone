@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling>=1.26.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "keystone-backend"
+version = "0.1.0"
+description = "Keystone FastAPI backend"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0,<1.0.0",
+  "pydantic-settings>=2.6.1,<3.0.0",
+  "uvicorn[standard]>=0.34.2,<1.0.0"
+]
+
+[project.scripts]
+keystone-backend-info = "src.cli:main"
+
+[dependency-groups]
+dev = [
+  "httpx>=0.28.1,<1.0.0",
+  "pytest>=8.3.5,<9.0.0",
+  "pytest-asyncio>=0.26.0,<1.0.0",
+  "ruff>=0.11.11,<1.0.0"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.uv]
+package = true
