@@ -38,6 +38,7 @@
 - Q: How should confidence be represented in the MVP? -> A: Show low, medium, and high confidence to users, backed by an internal numeric score and thresholds.
 - Q: How should BF1, BF2, and mentor-loss risks be defined in the MVP? -> A: BF1 means one dominant authority with no credible bench, BF2 means authority concentrated in the top two contributors with weak bench behind them, and mentor-loss means losing a mentoring or review-heavy bridge contributor would materially weaken readiness.
 - Q: What minimum evidence threshold should gate scoring outputs in the MVP? -> A: Allow provisional outputs from strong single-source evidence, but require corroboration or stronger sustained evidence before high-confidence coverage and risk flags are shown.
+- Q: What compliance gate is required before the first audit can be published? -> A: Require a workspace-admin attestation during onboarding that the customer's lawful basis and required worker notices are in place, and block first publish until it is completed.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -67,6 +68,10 @@ thin-coverage topics.
 2. **Given** a customer has incomplete or thin source coverage, **When** a user
    tries to publish the audit, **Then** the system withholds the result and states
    what evidence is missing.
+3. **Given** the workspace admin has not completed the required compliance
+  attestation, **When** a user tries to publish the first audit, **Then** the
+  system blocks publication and states that lawful-basis and worker-notice
+  confirmation must be completed first.
 
 ---
 
@@ -176,6 +181,9 @@ connector priority ahead of later Notion-, Slack-, or other source additions.
   a tenant-specific encryption layer for sensitive Map records in the pooled tier,
   limits model-assisted topic bootstrap to representative summaries or selected
   snippets for ambiguous clusters rather than broad raw activity batches,
+  requires a workspace-admin attestation during onboarding that the customer's
+  lawful basis and any required worker notices are in place before the first
+  audit can be published,
   pseudonymizes contributor identities by default, allows re-identification only in
   authorized tenant views for VPE/CTO-level roles and engineering managers within
   their scoped teams, requires justification and audit logging for every
@@ -222,6 +230,9 @@ connector priority ahead of later Notion-, Slack-, or other source additions.
   confirm proposed topics before the map is published.
 - **FR-004**: The system MUST allow an approver to mark business-critical topics and
   publish the first map with minimal approval effort.
+- **FR-004a**: The system MUST block the first audit publish until a workspace admin
+  attests during onboarding that the customer's lawful basis and required worker
+  notices are in place for the planned use of the product.
 - **FR-005**: The system MUST generate a bus-factor audit that identifies topics with
   single coverage or thin backup coverage.
 - **FR-005a**: The system MUST define BF1 risk as one dominant authority with no
@@ -324,6 +335,9 @@ connector priority ahead of later Notion-, Slack-, or other source additions.
 - **SC-008**: 100% of pilot customer environments enforce pseudonymized contributor
   storage by default, with named contributor views limited to authorized tenant
   roles before a customer audit is published.
+- **SC-008a**: 100% of pilot customer workspaces capture the required workspace-admin
+  attestation for lawful basis and worker notices before the first audit publish is
+  permitted.
 - **SC-009**: The MVP can be launched and operated in a shared-tenant model for pilot
   customers without blocking a later move to provider-hosted per-tenant or
   customer-hosted deployment models.
