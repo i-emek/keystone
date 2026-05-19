@@ -1,11 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-test("frontend shell shows the workspace intro copy", async ({ page }) => {
+test("frontend shell shows the shared analytics workspace intro", async ({ page }) => {
   await page.goto("/");
 
   await expect(
-    page.getByText(
-      "This workspace confirms the frontend, backend, and worker can run together",
-    ),
+    page.getByText("A shared shell for status, trust, and analytical views"),
   ).toBeVisible();
 });
